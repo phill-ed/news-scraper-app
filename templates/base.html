@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}News Scraper{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #4a90d9;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        .sidebar {
+            min-height: 100vh;
+            background: #fff;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+        }
+        
+        .sidebar .nav-link {
+            color: #333;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 4px 8px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: var(--primary-color);
+            color: #fff;
+        }
+        
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+        
+        .main-content {
+            padding: 20px;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .stat-card {
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .stat-card.positive { border-left-color: var(--success-color); }
+        .stat-card.negative { border-left-color: var(--danger-color); }
+        .stat-card.neutral { border-left-color: var(--secondary-color); }
+        
+        .table-card {
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .table thead th {
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background: #357abd;
+        }
+        
+        .sentiment-positive { color: var(--success-color); }
+        .sentiment-negative { color: var(--danger-color); }
+        .sentiment-neutral { color: var(--secondary-color); }
+        
+        .badge-sentiment {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+        
+        .badge-sentiment.positive { background: #d4edda; color: #155724; }
+        .badge-sentiment.negative { background: #f8d7da; color: #721c24; }
+        .badge-sentiment.neutral { background: #e2e3e5; color: #383d41; }
+        
+        .article-title {
+            color: #333;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .article-title:hover {
+            color: var(--primary-color);
+        }
+        
+        .search-box {
+            position: relative;
+        }
+        
+        .search-box .bi-search {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .search-box input {
+            padding-left: 38px;
+            border-radius: 20px;
+        }
+        
+        .pagination {
+            justify-content: center;
+        }
+        
+        .page-link {
+            border-radius: 20px;
+            margin: 0 3px;
+        }
+        
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                z-index: 100;
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse show" id="sidebar">
+                <div class="position-sticky pt-3">
+                    <div class="text-center mb-4">
+                        <h4 class="text-primary">
+                            <i class="bi bi-newspaper"></i> News Scraper
+                        </h4>
+                    </div>
+                    
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('index') }}">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('websites') }}">
+                                <i class="bi bi-globe"></i> Websites
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('news') }}">
+                                <i class="bi bi-file-text"></i> News
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('schedules') }}">
+                                <i class="bi bi-clock"></i> Schedules
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <hr class="my-3">
+                    
+                    <div class="px-3">
+                        <a href="{{ url_for('scrape_all') }}" class="btn btn-primary w-100">
+                            <i class="bi bi-play-fill"></i> Scrape All
+                        </a>
+                    </div>
+                </div>
+            </nav>
+            
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <!-- Mobile Toggle -->
+                <button class="btn btn-primary d-md-none mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar">
+                    <i class="bi bi-list"></i> Menu
+                </button>
+                
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="toast-container">
+                            {% for category, message in messages %}
+                                <div class="toast show" role="alert">
+                                    <div class="toast-header bg-{{ category }}">
+                                        <strong class="me-auto">{{ category|title }}</strong>
+                                        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                                    </div>
+                                    <div class="toast-body">
+                                        {{ message }}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

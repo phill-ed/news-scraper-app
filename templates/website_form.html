@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}{% if website %}Edit Website{% else %}Add Website{% endif %} - News Scraper{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">{% if website %}Edit Website{% else %}Add Website{% endif %}</h1>
+</div>
+
+<form method="POST" class="row">
+    <!-- Basic Info -->
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Basic Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Website Name</label>
+                    <input type="text" class="form-control" id="name" name="name" 
+                           value="{{ website.name if website else '' }}" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="url" class="form-label">URL</label>
+                    <input type="url" class="form-control" id="url" name="url" 
+                           value="{{ website.url if website else '' }}" 
+                           placeholder="https://example.com/news" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="category" class="form-label">Category</label>
+                    <input type="text" class="form-control" id="category" name="category" 
+                           value="{{ website.category if website else 'General' }}">
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                               {% if website and website.is_active %}checked{% endif %}>
+                        <label class="form-check-label" for="is_active">Active</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- CSS Selectors -->
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-code-slash"></i> CSS Selectors</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="title_selector" class="form-label">Title Selector</label>
+                    <input type="text" class="form-control" id="title_selector" name="title_selector" 
+                           value="{{ website.title_selector if website else 'h1, .title, .article-title' }}">
+                    <small class="text-muted">Comma-separated CSS selectors for article title</small>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="date_selector" class="form-label">Date Selector</label>
+                    <input type="text" class="form-control" id="date_selector" name="date_selector" 
+                           value="{{ website.date_selector if website else 'time, .date, .published' }}">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="content_selector" class="form-label">Content Selector</label>
+                    <input type="text" class="form-control" id="content_selector" name="content_selector" 
+                           value="{{ website.content_selector if website else 'article, .content, .article-content' }}">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="category_selector" class="form-label">Category Selector</label>
+                    <input type="text" class="form-control" id="category_selector" name="category_selector" 
+                           value="{{ website.category_selector if website else '.category, .tag' }}">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Advanced Settings -->
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-gear"></i> Advanced Settings</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="use_playwright" name="use_playwright" 
+                                       {% if website and website.use_playwright %}checked{% endif %}>
+                                <label class="form-check-label" for="use_playwright">
+                                    Use Playwright (JavaScript rendering)
+                                </label>
+                            </div>
+                            <small class="text-muted">Enable for JavaScript-rendered websites</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="proxy_enabled" name="proxy_enabled" 
+                                       {% if website and website.proxy_enabled %}checked{% endif %}>
+                                <label class="form-check-label" for="proxy_enabled">Enable Proxy</label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3" id="proxy-fields" style="{% if not website or not website.proxy_enabled %}display:none;{% endif %}">
+                            <label for="proxy_http" class="form-label">HTTP Proxy</label>
+                            <input type="text" class="form-control mb-2" id="proxy_http" name="proxy_http" 
+                                   value="{{ website.proxy_http if website else '' }}" 
+                                   placeholder="http://proxy:8080">
+                            
+                            <label for="proxy_https" class="form-label">HTTPS Proxy</label>
+                            <input type="text" class="form-control" id="proxy_https" name="proxy_https" 
+                                   value="{{ website.proxy_https if website else '' }}" 
+                                   placeholder="https://proxy:8080">
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="auto_scrape_enabled" name="auto_scrape_enabled" 
+                                       {% if website and website.auto_scrape_enabled %}checked{% endif %}>
+                                <label class="form-check-label" for="auto_scrape_enabled">Enable Auto-Scrape</label>
+                            </div>
+                            <small class="text-muted">Automatically scrape on a schedule</small>
+                        </div>
+                        
+                        <div class="mb-3" id="schedule-field" style="{% if not website or not website.auto_scrape_enabled %}display:none;{% endif %}">
+                            <label for="scrape_interval" class="form-label">Scrape Interval (seconds)</label>
+                            <input type="number" class="form-control" id="scrape_interval" name="scrape_interval" 
+                                   value="{{ website.scrape_interval if website else 3600 }}" min="60">
+                            <small class="text-muted">Default: 3600 (1 hour)</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Submit Buttons -->
+    <div class="col-12">
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-lg"></i> {% if website %}Update Website{% else %}Add Website{% endif %}
+            </button>
+            <a href="{{ url_for('websites') }}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </div>
+</form>
+
+{% block extra_js %}
+<script>
+    // Toggle proxy fields
+    document.getElementById('proxy_enabled').addEventListener('change', function() {
+        document.getElementById('proxy-fields').style.display = this.checked ? 'block' : 'none';
+    });
+    
+    // Toggle schedule field
+    document.getElementById('auto_scrape_enabled').addEventListener('change', function() {
+        document.getElementById('schedule-field').style.display = this.checked ? 'block' : 'none';
+    });
+</script>
+{% endblock %}
+{% endblock %}

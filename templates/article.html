@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title[:50] }}... - News Scraper{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('news') }}">News</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ article.title[:50] }}...</li>
+        </ol>
+    </nav>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <form action="{{ url_for('article_bookmark', id=article.id) }}" method="POST" class="d-inline">
+            <button type="submit" class="btn btn-sm btn-{% if article.is_bookmarked %}warning{% else %}outline-warning{% endif %}">
+                <i class="bi bi-bookmark{% if article.is_bookmarked %}-fill{% endif %}"></i>
+                {% if article.is_bookmarked %}Bookmarked{% else %}Bookmark{% endif %}
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Article Content -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title mb-3">{{ article.title }}</h2>
+                
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    {% if article.website %}
+                    <span class="text-muted">
+                        <i class="bi bi-globe"></i> {{ article.website.name }}
+                    </span>
+                    {% endif %}
+                    
+                    {% if article.category %}
+                    <span class="badge bg-info">{{ article.category }}</span>
+                    {% endif %}
+                    
+                    {% if article.author %}
+                    <span class="text-muted">
+                        <i class="bi bi-person"></i> {{ article.author }}
+                    </span>
+                    {% endif %}
+                    
+                    {% if article.published_date %}
+                    <span class="text-muted">
+                        <i class="bi bi-calendar"></i> {{ article.published_date.strftime('%Y-%m-%d') }}
+                    </span>
+                    {% endif %}
+                    
+                    {% if article.sentiment %}
+                    <span class="badge badge-sentiment {{ article.sentiment }}">
+                        {{ article.sentiment }} ({{ "%.2f"|format(article.sentiment_score) if article.sentiment_score else 'N/A' }})
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <hr>
+                
+                <div class="article-content">
+                    {% if article.summary %}
+                    <h5 class="text-muted mb-3">{{ article.summary }}</h5>
+                    {% endif %}
+                    
+                    <p class="card-text" style="white-space: pre-wrap;">{{ article.content }}</p>
+                </div>
+                
+                <hr>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        Scraped: {{ article.scraped_at.strftime('%Y-%m-%d %H:%M') if article.scraped_at else 'N/A' }}
+                    </small>
+                    <a href="{{ article.url }}" target="_blank" class="btn btn-primary">
+                        <i class="bi bi-box-arrow-up-right"></i> Visit Original
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Article Info -->
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Article Info</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <td class="text-muted">Website</td>
+                        <td>{{ article.website.name if article.website else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Category</td>
+                        <td>{{ article.category or '-' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Author</td>
+                        <td>{{ article.author or '-' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Published</td>
+                        <td>
+                            {% if article.published_date %}
+                            {{ article.published_date.strftime('%Y-%m-%d %H:%M') }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Scraped</td>
+                        <td>
+                            {% if article.scraped_at %}
+                            {{ article.scraped_at.strftime('%Y-%m-%d %H:%M') }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Sentiment</td>
+                        <td>
+                            {% if article.sentiment %}
+                            <span class="badge badge-sentiment {{ article.sentiment }}">{{ article.sentiment }}</span>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Sentiment Analysis -->
+        {% if article.sentiment %}
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-emoji-smile"></i> Sentiment Analysis</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if article.sentiment == 'positive' %}
+                <i class="bi bi-emoji-smile fs-1 text-success"></i>
+                {% elif article.sentiment == 'negative' %}
+                <i class="bi bi-emoji-frown fs-1 text-danger"></i>
+                {% else %}
+                <i class="bi bi-emoji-neutral fs-1 text-muted"></i>
+                {% endif %}
+                
+                <h4 class="mt-2 text-capitalize">{{ article.sentiment }}</h4>
+                
+                {% if article.sentiment_score %}
+                <div class="progress mt-3" style="height: 20px;">
+                    <div class="progress-bar {% if article.sentiment_score > 0 %}bg-success{% elif article.sentiment_score < 0 %}bg-danger{% else %}bg-secondary{% endif %}" 
+                         role="progressbar" 
+                         style="width: {{ ((article.sentiment_score + 1) / 2) * 100 }}%">
+                        {{ "%.1f"|format(article.sentiment_score * 100) }}%
+                    </div>
+                </div>
+                <small class="text-muted">Score: {{ "%.3f"|format(article.sentiment_score) }}</small>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-lightning"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ article.url }}" target="_blank" class="btn btn-outline-primary">
+                        <i class="bi bi-box-arrow-up-right"></i> View Original
+                    </a>
+                    <a href="{{ url_for('news', website_id=article.website_id) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-globe"></i> More from {{ article.website.name if article.website else 'this site' }}
+                    </a>
+                    <a href="{{ url_for('news', category=article.category) }}" class="btn btn-outline-info">
+                        <i class="bi bi-tag"></i> More in {{ article.category or 'this category' }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

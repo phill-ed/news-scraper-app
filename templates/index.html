@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - News Scraper{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Dashboard</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('scrape_all') }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-arrow-clockwise"></i> Scrape All Now
+        </a>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Total Websites</h6>
+                        <h2 class="mb-0">{{ total_websites }}</h2>
+                    </div>
+                    <div class="text-primary">
+                        <i class="bi bi-globe fs-1"></i>
+                    </div>
+                </div>
+                <small class="text-muted">{{ active_websites }} active</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Total Articles</h6>
+                        <h2 class="mb-0">{{ total_articles }}</h2>
+                    </div>
+                    <div class="text-success">
+                        <i class="bi bi-file-text fs-1"></i>
+                    </div>
+                </div>
+                <small class="text-muted">Scraped articles</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Sentiment</h6>
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-success">{{ sentiment_stats.positive }} pos</span>
+                            <span class="badge bg-secondary">{{ sentiment_stats.neutral }} neu</span>
+                            <span class="badge bg-danger">{{ sentiment_stats.negative }} neg</span>
+                        </div>
+                    </div>
+                    <div class="text-info">
+                        <i class="bi bi-emoji-smile fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts and Tables -->
+<div class="row">
+    <!-- Category Distribution -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Articles by Category</h5>
+            </div>
+            <div class="card-body">
+                {% if categories %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Count</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category, count in categories %}
+                            <tr>
+                                <td>{{ category or 'Uncategorized' }}</td>
+                                <td>{{ count }}</td>
+                                <td>
+                                    {% if total_articles > 0 %}
+                                    {{ "%.1f"|format(count / total_articles * 100) }}%
+                                    {% else %}
+                                    0%
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-4">No data yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sentiment Distribution -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-emoji-smile"></i> Sentiment Analysis</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="sentiment-positive">
+                            <i class="bi bi-emoji-smile fs-1"></i>
+                            <h4 class="mt-2">{{ sentiment_stats.positive }}</h4>
+                            <small class="text-muted">Positive</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="sentiment-neutral">
+                            <i class="bi bi-emoji-neutral fs-1"></i>
+                            <h4 class="mt-2">{{ sentiment_stats.neutral }}</h4>
+                            <small class="text-muted">Neutral</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="sentiment-negative">
+                            <i class="bi bi-emoji-frown fs-1"></i>
+                            <h4 class="mt-2">{{ sentiment_stats.negative }}</h4>
+                            <small class="text-muted">Negative</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Articles -->
+<div class="row">
+    <div class="col-12">
+        <div class="card table-card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Articles</h5>
+                <a href="{{ url_for('news') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Website</th>
+                                <th>Category</th>
+                                <th>Sentiment</th>
+                                <th>Scraped</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for article in recent_articles %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('article_detail', id=article.id) }}" class="article-title">
+                                        {{ article.title[:60] }}{% if article.title|length > 60 %}...{% endif %}
+                                    </a>
+                                </td>
+                                <td>{{ article.website.name if article.website else 'N/A' }}</td>
+                                <td>
+                                    {% if article.category %}
+                                    <span class="badge bg-info">{{ article.category }}</span>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if article.sentiment %}
+                                    <span class="badge badge-sentiment {{ article.sentiment }}">
+                                        {{ article.sentiment }}
+                                    </span>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {% if article.scraped_at %}
+                                        {{ article.scraped_at.strftime('%Y-%m-%d %H:%M') }}
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </small>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    No articles yet. <a href="{{ url_for('websites') }}">Add a website</a> to start scraping.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Logs -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card table-card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-journal-text"></i> Recent Activity</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Website</th>
+                                <th>Action</th>
+                                <th>Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in recent_logs %}
+                            <tr>
+                                <td><small>{{ log.created_at.strftime('%Y-%m-%d %H:%M') }}</small></td>
+                                <td>{{ log.website.name if log.website else 'N/A' }}</td>
+                                <td>
+                                    {% if log.action == 'success' %}
+                                    <span class="badge bg-success">{{ log.action }}</span>
+                                    {% elif log.action == 'error' %}
+                                    <span class="badge bg-danger">{{ log.action }}</span>
+                                    {% else %}
+                                    <span class="badge bg-info">{{ log.action }}</span>
+                                    {% endif %}
+                                </td>
+                                <td><small>{{ log.message or '-' }}</small></td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-3 text-muted">No activity yet</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
