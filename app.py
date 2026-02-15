@@ -323,6 +323,9 @@ def analyze_sentiment():
     class DummyWebsite:
         def __init__(self, sentiment_method):
             self.sentiment_method = sentiment_method
+            self.proxy_enabled = False
+            self.proxy_http = None
+            self.proxy_https = None
     
     dummy_site = DummyWebsite(method)
     scraper = ScraperEngine(dummy_site)
