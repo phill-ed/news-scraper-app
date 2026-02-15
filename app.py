@@ -18,7 +18,7 @@ db.init_app(app)
 scheduler_manager = None
 
 
-@app.before_first_request
+@app.before_request
 def initialize_database():
     """Create database tables"""
     db.create_all()
