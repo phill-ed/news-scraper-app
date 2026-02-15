@@ -171,7 +171,7 @@
                             {% for article in recent_articles %}
                             <tr>
                                 <td>
-                                    <a href="{{ url_for('article_detail', id=article.id) }}" class="article-title">
+                                    <a href="{{ url_for('article_detail', id=article.id) }}" class="article-title" target="_blank">
                                         {{ article.title[:60] }}{% if article.title|length > 60 %}...{% endif %}
                                     </a>
                                 </td>

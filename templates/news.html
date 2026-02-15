@@ -91,7 +91,7 @@
                     {% for article in articles %}
                     <tr>
                         <td>
-                            <a href="{{ url_for('article_detail', id=article.id) }}" class="article-title">
+                            <a href="{{ url_for('article_detail', id=article.id) }}" class="article-title" target="_blank">
                                 {{ article.title[:80] }}{% if article.title|length > 80 %}...{% endif %}
                             </a>
                             {% if article.is_bookmarked %}
