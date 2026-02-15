@@ -26,6 +26,9 @@ class Website(db.Model):
     proxy_http = db.Column(db.String(200), nullable=True)
     proxy_https = db.Column(db.String(200), nullable=True)
     
+    # Sentiment analysis method
+    sentiment_method = db.Column(db.String(20), default='keyword')  # keyword, textblob, vader, openai
+    
     # Schedule settings
     auto_scrape_enabled = db.Column(db.Boolean, default=False)
     scrape_interval = db.Column(db.Integer, default=3600)  # seconds
@@ -51,6 +54,7 @@ class Website(db.Model):
             'proxy_enabled': self.proxy_enabled,
             'proxy_http': self.proxy_http,
             'proxy_https': self.proxy_https,
+            'sentiment_method': self.sentiment_method,
             'auto_scrape_enabled': self.auto_scrape_enabled,
             'scrape_interval': self.scrape_interval,
             'created_at': self.created_at.isoformat() if self.created_at else None,

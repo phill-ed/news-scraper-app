@@ -300,11 +300,23 @@ class ScraperEngine:
         return None
     
     def _analyze_sentiment(self, text: str) -> tuple:
-        """Basic sentiment analysis using keyword matching"""
+        """Sentiment analysis with multiple methods"""
         if not text:
             return 'neutral', 0.0
         
-        # Simple keyword-based sentiment
+        method = getattr(self.website, 'sentiment_method', 'keyword')
+        
+        if method == 'textblob':
+            return self._sentiment_textblob(text)
+        elif method == 'vader':
+            return self._sentiment_vader(text)
+        elif method == 'openai':
+            return self._sentiment_openai(text)
+        else:
+            return self._sentiment_keyword(text)
+    
+    def _sentiment_keyword(self, text: str) -> tuple:
+        """Basic keyword-based sentiment"""
         positive_words = [
             'good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic',
             'positive', 'success', 'win', 'best', 'love', 'happy', 'joy',
@@ -334,6 +346,71 @@ class ScraperEngine:
             return 'negative', score
         else:
             return 'neutral', score
+    
+    def _sentiment_textblob(self, text: str) -> tuple:
+        """TextBlob sentiment analysis"""
+        try:
+            from textblob import TextBlob
+            blob = TextBlob(text)
+            polarity = blob.sentiment.polarity  # -1 to 1
+            
+            if polarity > 0.1:
+                return 'positive', polarity
+            elif polarity < -0.1:
+                return 'negative', polarity
+            else:
+                return 'neutral', polarity
+        except ImportError:
+            return self._sentiment_keyword(text)
+        except Exception as e:
+            return 'neutral', 0.0
+    
+    def _sentiment_vader(self, text: str) -> tuple:
+        """VADER sentiment analysis"""
+        try:
+            from nltk.sentiment.vader import SentimentIntensityAnalyzer
+            sia = SentimentIntensityAnalyzer()
+            scores = sia.polarity_scores(text)
+            compound = scores['compound']
+            
+            if compound >= 0.05:
+                return 'positive', compound
+            elif compound <= -0.05:
+                return 'negative', compound
+            else:
+                return 'neutral', compound
+        except ImportError:
+            return self._sentiment_keyword(text)
+        except Exception as e:
+            return 'neutral', 0.0
+    
+    def _sentiment_openai(self, text: str) -> tuple:
+        """OpenAI API sentiment analysis"""
+        try:
+            import openai
+            import os
+            
+            client = openai.OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
+            
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{
+                    "role": "user",
+                    "content": f"Analyze the sentiment of this text and respond with only one word: positive, negative, or neutral:\n\n{text[:500]}"
+                }],
+                temperature=0
+            )
+            
+            result = response.choices[0].message.content.strip().lower()
+            
+            if 'positive' in result:
+                return 'positive', 0.5
+            elif 'negative' in result:
+                return 'negative', -0.5
+            else:
+                return 'neutral', 0.0
+        except Exception as e:
+            return 'neutral', 0.0
 
 
 def scrape_website(website_id: int) -> Dict:

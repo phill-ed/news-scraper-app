@@ -99,6 +99,7 @@ def website_new():
             proxy_enabled='proxy_enabled' in request.form,
             proxy_http=request.form.get('proxy_http'),
             proxy_https=request.form.get('proxy_https'),
+            sentiment_method=request.form.get('sentiment_method', 'keyword'),
             auto_scrape_enabled='auto_scrape_enabled' in request.form,
             scrape_interval=int(request.form.get('scrape_interval', 3600))
         )
@@ -133,6 +134,7 @@ def website_edit(id):
         website.proxy_enabled = 'proxy_enabled' in request.form
         website.proxy_http = request.form.get('proxy_http')
         website.proxy_https = request.form.get('proxy_https')
+        website.sentiment_method = request.form.get('sentiment_method', 'keyword')
         
         old_auto_scrape = website.auto_scrape_enabled
         website.auto_scrape_enabled = 'auto_scrape_enabled' in request.form
