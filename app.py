@@ -230,6 +230,7 @@ def news():
     website_id = request.args.get('website_id', type=int)
     category = request.args.get('category')
     sentiment = request.args.get('sentiment')
+    sentiment_method = request.args.get('sentiment_method')
     search = request.args.get('search')
     page = request.args.get('page', 1, type=int)
     
@@ -275,6 +276,7 @@ def news():
                          current_website=website_id,
                          current_category=category,
                          current_sentiment=sentiment,
+                         current_sentiment_method=sentiment_method,
                          search=search)
 
 
@@ -296,6 +298,56 @@ def article_bookmark(id):
     db.session.commit()
     
     return jsonify({'bookmarked': article.is_bookmarked})
+
+
+@app.route('/analyze-sentiment', methods=['POST'])
+def analyze_sentiment():
+    """Re-analyze sentiment for articles using selected method"""
+    method = request.form.get('method', 'keyword')
+    filter_website = request.form.get('filter_website')
+    
+    # Build query
+    query = Article.query
+    if filter_website:
+        query = query.filter(Article.website_id == filter_website)
+    
+    articles = query.all()
+    
+    updated = 0
+    errors = []
+    
+    # Import the sentiment analysis methods
+    from scraper import ScraperEngine
+    
+    # Create a dummy website object with the selected sentiment method
+    class DummyWebsite:
+        def __init__(self, sentiment_method):
+            self.sentiment_method = sentiment_method
+    
+    dummy_site = DummyWebsite(method)
+    scraper = ScraperEngine(dummy_site)
+    
+    for article in articles:
+        try:
+            if article.content:
+                sentiment, score = scraper._analyze_sentiment(article.content)
+                article.sentiment = sentiment
+                article.sentiment_score = score
+                updated += 1
+        except Exception as e:
+            errors.append(f"Article {article.id}: {str(e)}")
+    
+    db.session.commit()
+    
+    if updated > 0:
+        flash(f'Successfully updated sentiment for {updated} articles using {method} method!', 'success')
+    else:
+        flash('No articles were updated.', 'warning')
+    
+    if errors:
+        flash(f'{len(errors)} errors occurred.', 'danger')
+    
+    return redirect(url_for('news'))
 
 
 # ==================== Export Routes ====================

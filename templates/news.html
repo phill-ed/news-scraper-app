@@ -63,12 +63,60 @@
                     <option value="negative" {% if current_sentiment == 'negative' %}selected{% endif %}>Negative</option>
                 </select>
             </div>
-            <div class="col-md-3 d-flex align-items-end">
+            <div class="col-md-2">
+                <label class="form-label">Analysis Method</label>
+                <select class="form-select" name="sentiment_method">
+                    <option value="">All Methods</option>
+                    <option value="keyword" {% if current_sentiment_method == 'keyword' %}selected{% endif %}>Keyword</option>
+                    <option value="textblob" {% if current_sentiment_method == 'textblob' %}selected{% endif %}>TextBlob</option>
+                    <option value="vader" {% if current_sentiment_method == 'vader' %}selected{% endif %}>VADER</option>
+                    <option value="openai" {% if current_sentiment_method == 'openai' %}selected{% endif %}>OpenAI</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary w-100">
                     <i class="bi bi-filter"></i> Apply Filters
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Sentiment Analysis -->
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-emoji-smile"></i> Sentiment Analysis</h5>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('analyze_sentiment') }}" method="POST" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Analysis Method</label>
+                <select class="form-select" name="method">
+                    <option value="keyword">Keyword (Default)</option>
+                    <option value="textblob">TextBlob (pip install textblob)</option>
+                    <option value="vader">VADER (pip install nltk)</option>
+                    <option value="openai">OpenAI API (requires API key)</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Filter (Optional)</label>
+                <select class="form-select" name="filter_website">
+                    <option value="">All Articles</option>
+                    {% for website in websites %}
+                    <option value="{{ website.id }}">{{ website.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-success w-100">
+                    <i class="bi bi-lightning"></i> Analyze & Update Sentiment
+                </button>
+            </div>
+        </form>
+        <small class="text-muted mt-2 d-block">
+            <i class="bi bi-info-circle"></i> 
+            This will re-analyze sentiment for filtered articles using the selected method.
+        </small>
     </div>
 </div>
 
