@@ -20,15 +20,28 @@ scheduler_manager = None
 
 @app.before_request
 def initialize_database():
-    """Create database tables"""
+    """Create database tables and run migrations"""
     db.create_all()
     
-    global scheduler_manager
-    scheduler_manager = init_scheduler(app)
-    scheduler_manager.start()
-    
-    # Load existing schedules
+    # Add missing columns (manual migration)
     with app.app_context():
+        try:
+            # Check if sentiment_method column exists
+            result = db.session.execute(db.text("SELECT sentiment_method FROM websites LIMIT 1"))
+            result.fetchone()
+        except Exception:
+            # Column doesn't exist, add it
+            try:
+                db.session.execute(db.text('ALTER TABLE websites ADD COLUMN sentiment_method VARCHAR(20) DEFAULT "keyword"'))
+                db.session.commit()
+            except:
+                pass
+        
+        global scheduler_manager
+        scheduler_manager = init_scheduler(app)
+        scheduler_manager.start()
+        
+        # Load existing schedules
         schedules = Schedule.query.filter_by(is_active=True).all()
         for schedule in schedules:
             scheduler_manager.add_job(schedule.id)
