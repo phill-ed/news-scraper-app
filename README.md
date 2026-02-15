@@ -120,6 +120,48 @@ Environment variables can be set in `config.py` or as system environment variabl
 - `USE_PLAYWRIGHT`: Enable Playwright by default
 - `SCHEDULER_ENABLED`: Enable scheduler
 
+## Sentiment Analysis
+
+The app includes basic keyword-based sentiment analysis. Here are alternatives you can implement:
+
+### Option 1: TextBlob (Simple)
+```python
+from textblob import TextBlob
+blob = TextBlob(text)
+sentiment = blob.sentiment.polarity  # -1 to 1
+```
+
+Install: `pip install textblob`
+
+### Option 2: VADER (Social Media Focused)
+```python
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+sia = SentimentIntensityAnalyzer()
+scores = sia.polarity_scores(text)
+```
+
+Install: `pip install nltk`
+
+### Option 3: Hugging Face Transformers (Most Accurate)
+```python
+from transformers import pipeline
+classifier = pipeline("sentiment-analysis")
+result = classifier(text)[0]
+```
+
+Install: `pip install transformers torch`
+
+### Option 4: OpenAI API
+```python
+import openai
+response = openai.ChatCompletion.create(
+    model="gpt-3.5-turbo",
+    messages=[{"role": "user", "content": f"Analyze sentiment: {text}"}]
+)
+```
+
+To use any of these, update the `_analyze_sentiment` function in `scraper.py`.
+
 ## License
 
 MIT License
